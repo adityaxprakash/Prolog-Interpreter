@@ -34,30 +34,45 @@ let solve_relational_atoms at sub =
           | [ Num n1; Num n2 ] -> (n1 > n2, sub)
           | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
           | _ -> raise Ill_formed)
+      | "=<" -> (
+          match exps with
+          | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
+          | [ Num n1; Num n2 ] -> (n1 <= n2, sub)
+          | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
+          | _ -> raise Ill_formed)
+      | ">=" -> (
+          match exps with
+          | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
+          | [ Num n1; Num n2 ] -> (n1 >= n2, sub)
+          | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
+          | _ -> raise Ill_formed)
       | _ -> raise Not_unifiable)
 
 let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
   let prog = modify_program_variables prog' in
   match goals with
-  | Goal [] -> (true, subs)
+  | Goal [] -> (true, subs, true)
   | Goal (g :: gs) -> (
       match g with
-      | Atom ("_fail", []) -> (false, [])
+      | Atom ("_fail", []) -> (false, [], true)
       | Atom ("_true", []) -> answer_goal prog (Goal gs) subs
       | Atom (">", e) | Atom ("<", e) | Atom ("\\=", e) | Atom ("=", e) -> (
           try
             let result = solve_relational_atoms g subs in
             if fst result then
               answer_goal prog (Goal gs) (compose_subst subs (snd result))
-            else (false, [])
-          with Not_unifiable | Ill_formed -> (false, []))
+            else (false, [], true)
+          with Not_unifiable | Ill_formed -> (false, [], true))
       | Not a -> (
           let subbed_a = subst_atom subs a in
           try
-            let result = answer_goal prog (Goal [ subbed_a ]) subs in
-            if fst result then (false, []) else answer_goal prog (Goal gs) subs
+            let result, _, _ = answer_goal prog (Goal [ subbed_a ]) subs in
+            if result then (false, [], true)
+            else answer_goal prog (Goal gs) subs
           with Not_unifiable -> answer_goal prog (Goal gs) subs)
-      | Atom ("_cut", []) -> answer_goal prog (Goal gs) subs
+      | Atom ("_cut", []) ->
+          let result, sub, _ = answer_goal prog (Goal gs) subs in
+          (result, sub, false)
       | _ ->
           (* let _ =
                match g with
@@ -67,14 +82,18 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
              in *)
           let rec iterate (p : program) =
             match p with
-            | [] -> (false, [])
+            | [] -> (false, [], true)
             | (Head h, Body b) :: ps -> (
                 try
                   let sigma = unify_atoms h g in
                   let g' = List.map (subst_atom sigma) (b @ gs)
                   and sigma' = compose_subst subs sigma in
-                  let result, new_sub = answer_goal prog (Goal g') sigma' in
-                  if result then (result, new_sub) else iterate ps
+                  let result, new_sub, not_cut =
+                    answer_goal prog (Goal g') sigma'
+                  in
+                  if result then (result, new_sub, not_cut)
+                  else if not_cut then iterate ps
+                  else (false, new_sub, not_cut)
                 with Not_unifiable ->
                   (* let (Atom (pred, ts)) = h in
                      print_endline (term_to_string (Func (pred, ts))); *)
@@ -83,5 +102,5 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
           iterate prog)
 
 let interpret_program (p : program) (g : goal) =
-  let vars = vars_in_goal g and subs = answer_goal p g [] in
-  console_text subs vars
+  let vars = vars_in_goal g and result, subs, _ = answer_goal p g [] in
+  console_text (result, subs) vars

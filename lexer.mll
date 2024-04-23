@@ -31,6 +31,8 @@ rule read = parse
     | "\\=" {NEQ}
     | "<" { LT }
     | ">" { GT } 
+    | ">=" { GTE }
+    | "=<" { LTE }
     | "\\+" { NOT }
 	| "not" { NOT }
 

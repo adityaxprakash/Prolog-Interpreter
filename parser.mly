@@ -12,7 +12,7 @@
 %token QUERY 
 %token TRUE NOT FAIL UNDERSCORE CUT
 // %token PLUS MINUS TIMES DIVIDE
-%token EQ NEQ GT LT
+%token EQ NEQ GT LT GTE LTE
 // %token KEY_IS 
 %token EOF
 
@@ -23,7 +23,7 @@
 
 // %nonassoc KEY_IS
 // %left KEY_NOT
-%left EQ NEQ GT LT
+%left EQ NEQ GT LT GTE LTE
 %left NOT
 // %left PLUS MINUS
 // %left KEY_MOD
@@ -62,6 +62,8 @@ atomic_formula:
 	| term NEQ term { Atom("\\=", [$1; $3]) }
 	| term GT term { Atom(">", [$1; $3]) }
 	| term LT term { Atom("<", [$1; $3]) }
+	| term GTE term { Atom(">=", [$1; $3]) }
+	| term LTE term { Atom("=<", [$1; $3]) }
 
 terms_list:
 	| term { [$1] }

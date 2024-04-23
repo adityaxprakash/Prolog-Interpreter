@@ -1,5 +1,36 @@
 open Helper
 
+let rec simplify_arith_terms (t : term) =
+  match t with
+  | Num n -> Num n
+  | Func ("+", [ t1; t2 ]) -> (
+      let t1' = simplify_arith_terms t1 and t2' = simplify_arith_terms t2 in
+      match (t1', t2') with
+      | Num n1, Num n2 -> Num (n1 + n2)
+      | Wildcard, _ | _, Wildcard -> Wildcard
+      | _ -> raise Ill_formed)
+  | Func ("-", [ t1; t2 ]) -> (
+      let t1' = simplify_arith_terms t1 and t2' = simplify_arith_terms t2 in
+      match (t1', t2') with
+      | Num n1, Num n2 -> Num (n1 - n2)
+      | Wildcard, _ | _, Wildcard -> Wildcard
+      | _ -> raise Ill_formed)
+  | Func ("*", [ t1; t2 ]) -> (
+      let t1' = simplify_arith_terms t1 and t2' = simplify_arith_terms t2 in
+      match (t1', t2') with
+      | Num n1, Num n2 -> Num (n1 * n2)
+      | Wildcard, _ | _, Wildcard -> Wildcard
+      | _ -> raise Ill_formed)
+  | Func ("/", [ t1; t2 ]) -> (
+      let t1' = simplify_arith_terms t1 and t2' = simplify_arith_terms t2 in
+      match (t1', t2') with
+      | Num n1, Num n2 -> Num (n1 / n2)
+      | Wildcard, _ | _, Wildcard -> Wildcard
+      | _ -> raise Ill_formed)
+  | Wildcard -> Wildcard
+  | Var v -> Var v
+  | Func (f, ts) -> Func (f, List.map simplify_arith_terms ts)
+
 let solve_relational_atoms at sub =
   match at with
   | Not a' -> raise Ill_formed
@@ -22,25 +53,38 @@ let solve_relational_atoms at sub =
                 (false, [])
               with Not_unifiable -> (true, []))
           | _ -> raise Ill_formed)
+      | "_is" -> (
+          let exps = List.map simplify_arith_terms exps in
+          match exps with
+          | [ a; b ] -> (
+              try
+                let unif = unify_terms a b in
+                (true, unif)
+              with Not_unifiable -> (false, []))
+          | _ -> raise Ill_formed)
       | "<" -> (
+          let exps = List.map simplify_arith_terms exps in
           match exps with
           | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
           | [ Num n1; Num n2 ] -> (n1 < n2, sub)
           | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
           | _ -> raise Ill_formed)
       | ">" -> (
+          let exps = List.map simplify_arith_terms exps in
           match exps with
           | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
           | [ Num n1; Num n2 ] -> (n1 > n2, sub)
           | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
           | _ -> raise Ill_formed)
       | "=<" -> (
+          let exps = List.map simplify_arith_terms exps in
           match exps with
           | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
           | [ Num n1; Num n2 ] -> (n1 <= n2, sub)
           | [ Wildcard; _ ] | [ _; Wildcard ] -> (true, sub)
           | _ -> raise Ill_formed)
       | ">=" -> (
+          let exps = List.map simplify_arith_terms exps in
           match exps with
           | [ Func _; _ ] | [ _; Func _ ] -> raise Ill_formed
           | [ Num n1; Num n2 ] -> (n1 >= n2, sub)
@@ -56,11 +100,17 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
       match g with
       | Atom ("_fail", []) -> (false, [], true)
       | Atom ("_true", []) -> answer_goal prog (Goal gs) subs
-      | Atom (">", e) | Atom ("<", e) | Atom ("\\=", e) | Atom ("=", e) -> (
+      | Atom (">", e)
+      | Atom ("<", e)
+      | Atom ("\\=", e)
+      | Atom ("=", e)
+      | Atom ("_is", e) -> (
           try
             let result = solve_relational_atoms g subs in
             if fst result then
-              answer_goal prog (Goal gs) (compose_subst subs (snd result))
+              let new_goals = List.map (subst_atom (snd result)) gs in
+              answer_goal prog (Goal new_goals)
+                (compose_subst subs (snd result))
             else (false, [], true)
           with Not_unifiable | Ill_formed -> (false, [], true))
       | Not a -> (

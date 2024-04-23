@@ -11,9 +11,9 @@
 %token PIPE
 %token QUERY 
 %token TRUE NOT FAIL UNDERSCORE CUT
-// %token PLUS MINUS TIMES DIVIDE
+%token PLUS MINUS TIMES DIVIDE
 %token EQ NEQ GT LT GTE LTE
-// %token KEY_IS 
+%token IS 
 %token EOF
 
 %start program goal
@@ -21,13 +21,11 @@
 %type <Helper.program> program
 %type <Helper.clause> clause
 
-// %nonassoc KEY_IS
-// %left KEY_NOT
+%left PLUS MINUS
+%left TIMES DIVIDE
 %left EQ NEQ GT LT GTE LTE
 %left NOT
-// %left PLUS MINUS
-// %left KEY_MOD
-// %left TIMES DIVIDE
+%nonassoc IS
 
 %%
 goal:
@@ -58,6 +56,7 @@ atomic_formula:
 	| CUT { Helper.cut_atom }
 	| NOT atomic_formula { Not $2 }
 
+	| term IS term { Atom("_is", [$1; $3])}
 	| term EQ term { Atom("=", [$1; $3]) }
 	| term NEQ term { Atom("\\=", [$1; $3]) }
 	| term GT term { Atom(">", [$1; $3]) }
@@ -77,11 +76,11 @@ term:
 	| UPPERCASE_IDENT { Var $1 }
 	| NUMBER { Num $1 }
 	| UNDERSCORE { Wildcard }    
-	// | term KEY_IS term { BinOperator("is", $1, $3)}
-	// | term PLUS term { BinOperator("+", $1, $3) }
-	// | term MINUS term { BinOperator("-", $1, $3) }
-	// | term TIMES term { BinOperator("*", $1, $3) }
-	// | term DIVIDE term { BinOperator("/", $1, $3) }
+
+	| term PLUS term { Func("+",[$1;$3]) }
+	| term MINUS term { Func("-",[$1;$3]) }
+	| term TIMES term { Func("*",[$1;$3]) }
+	| term DIVIDE term { Func("/",[$1;$3]) }
 	| list { $1 }
 
 list:

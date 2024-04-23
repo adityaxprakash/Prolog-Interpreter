@@ -14,7 +14,7 @@ rule read = parse
 	| "fail" { FAIL }
 	| "true" { TRUE }
 	| '!' {CUT}
-	(* | "is" { KEY_IS } *)
+	| "is" { IS }
 
     | '(' { LPAREN }
     | ')' { RPAREN }
@@ -22,10 +22,10 @@ rule read = parse
     | ']' {RSQBRACK}
     | '|' { PIPE }
 
-    (* | '+' { PLUS }
+    | '+' { PLUS }
     | '-' { MINUS }
     | '*' { TIMES }
-    | '/' { DIVIDE } *)
+    | '/' { DIVIDE }
 
     | "=" { EQ }
     | "\\=" {NEQ}

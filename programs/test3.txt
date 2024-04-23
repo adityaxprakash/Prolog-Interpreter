@@ -1,143 +1,90 @@
+% P03 (*): Find the K'th element of a list.
+% The first element in the list is number 1.
 
-% Base types
-islistbasetype(intT).
-islistbasetype(boolT).
-islistbasetype(unitT).
+% element_at(X,L,K) :- X is the K'th element of the list L
+%    (element,list,integer) (?,?,+)
 
-% Predicate to check whether the given type is one of the three base types.
-istype(intT).
-istype(boolT).
-istype(unitT).
-istype(listT(T)):-islistbasetype(T).
+% Note: nth1(?Index, ?List, ?Elem) is predefined
 
+element_at(X,[X|_],1).
+element_at(X,[_|L],K) :- K > 1, K1 is K - 1, element_at(X,L,K1).
 
-% Base cases
-hastype(G,num(N),intT):- integer(N).
-hastype(G,bool(true),boolT).
-hastype(G,bool(false),boolT).
-hastype(G,unit,unitT).
-hastype(G,nil,listT(T)):-islistbasetype(T).
+% P15 (**): Duplicate the elements of a list agiven number of times
 
-% List operations
-hastype(G, cons(A,B), listT(T)) :- islistbasetype(T) , hastype(G, A, T), hastype(G, B, listT(T)).
-hastype(G, head(A), T) :- istype(T), hastype(G, A, listT(T)).
-/*
-?- hastype(G,cons(var(x),cons(num(5),cons(var(y),nil))),T).
-G = [(x, intT), (y, intT)|_],
-T = listT(intT) ;
+% dupli(L1,N,L2) :- L2 is obtained from L1 by duplicating all elements
+%    N times.
+%    (list,integer,list) (?,+,?)
 
-?- hastype([],cons(bool(true),nil),T).
-T = listT(boolT) ;
-*/
+dupli(L1,N,L2) :- dupli(L1,N,L2,N).
 
-% Variable base case
-% hastype(G,var(X),T):- atom(X), istype(T), mem((X,T),G). 
-/*
-?- hastype(G, var(x),T).
-G = [(x, intT)|_],
-T = intT ;
-G = [(x, boolT)|_],
-T = boolT ;
-G = [(x, unitT)|_],
-T = unitT ;
-G = [(x, listT(intT))|_],
-T = listT(intT) ;
-G = [(x, listT(boolT))|_],
-T = listT(boolT) ;
-G = [(x, listT(unitT))|_],
-T = listT(unitT).
-*/
+% dupli(L1,N,L2,K) :- L2 is obtained from L1 by duplicating its leading
+%    element K times, all other elements N times.
+%    (list,integer,list,integer) (?,+,?,+)
 
+dupli([],_,[],_).
+dupli([_|Xs],N,Ys,0) :- dupli(Xs,N,Ys,N).
+dupli([X|Xs],N,[X|Ys],K) :- K > 0, K1 is K - 1, dupli([X|Xs],N,Ys,K1).
 
-% Arithmetic operations
-hastype(G,plus(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,minus(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,times(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,divide(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,abs(E),intT):- hastype(G,E,intT).
-hastype(G,negate(E),intT):- hastype(G,E,intT).  
-hastype(G,mod(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
-/*
+% P18 (**):  Extract a slice from a list
 
-?- hastype(G,plus(times(var(x),num(5)),minus(abs(num(2)),num(6))),T).
-G = [(x, intT)|_],
-T = intT.
+% slice(L1,I,K,L2) :- L2 is the list of the elements of L1 between
+%    index I and index K (both included).
+%    (list,integer,integer,list) (?,+,+,?)
 
-?- hastype(G,plus(var(x),num(5)),T).
-G = [(x, intT)|_],
-acT = intT .
+slice([X|_],1,1,[X]).
+slice([X|Xs],1,K,[X|Ys]) :- K > 1, 
+   K1 is K - 1, slice(Xs,1,K1,Ys).
+slice([_|Xs],I,K,Ys) :- I > 1, 
+   I1 is I - 1, K1 is K - 1, slice(Xs,I1,K1,Ys).
 
-?- hastype([(x,intT),(y,T)],plus(var(y),var(x)),intT).
-T = intT .
+   % P26 (**):  Generate the combinations of k distinct objects
+%            chosen from the n elements of a list.
+
+% combination(K,L,C) :- C is a list of K distinct elements 
+%    chosen from the list L
+
+combination(0,_,[]).
+combination(K,L,[X|Xs]) :- K > 0,
+   el(X,L,R), K1 is K-1, combination(K1,R,Xs).
+
+% Find out what the following predicate el/3 exactly does.
+
+el(X,[X|L],L).
+el(X,[_|L],R) :- el(X,L,R).
 
 
-?- hastype(G,greaterthan(times(var(x),num(5)),minus(abs(num(2)),num(6))),T).
-G = [(x, intT)|_],
-T = boolT.
-*/
+% P19 (**): Rotate a list N places to the left 
+
+% rotate(L1,N,L2) :- the list L2 is obtained from the list L1 by 
+%    rotating the elements of L1 N places to the left.
+%    Examples: 
+%    rotate([a,b,c,d,e,f,g,h],3,[d,e,f,g,h,a,b,c])
+%    rotate([a,b,c,d,e,f,g,h],-2,[g,h,a,b,c,d,e,f])
+%    (list,integer,list) (+,+,?)
+
+% P17 (*): Split a list into two parts
+
+% split(L,N,L1,L2) :- the list L1 contains the first N elements
+%    of the list L, the list L2 contains the remaining elements.
+%    (list,integer,list,list) (?,+,?,?)
+
+split(L,0,[],L).
+split([X|Xs],N,[X|Ys],Zs) :- N > 0, N1 is N - 1, split(Xs,N1,Ys,Zs).
+
+length([],0).
+length([_|L],N) :- length(L,N1), N is N1 + 1.
+
+append([],L,L).
+append([X|L1],L2,[X|L3]) :- append(L1,L2,L3).
 
 
-% Boolean operations
-hastype(G,not(E),boolT):- hastype(G,E,boolT).
-hastype(G,and(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
-hastype(G,or(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
-hastype(G,implies(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
-hastype(G,ifandonlyif(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
-hastype(G,xor(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).  
-/*
+rotate(L1,N,L2) :- N >= 0, 
+   length(L1,NL1), N1 is N mod NL1, rotate_left(L1,N1,L2).
+rotate(L1,N,L2) :- N < 0,
+   length(L1,NL1), N1 is NL1 + (N mod NL1), rotate_left(L1,N1,L2).
 
-?- hastype(G,not(xor(implies(var(x),var(y)),ifandonlyif(var(z),bool(false)))),T).
-G = [(x, boolT), (y, boolT), (z, boolT)|_],
-T = boolT.
+rotate_left(L,0,L).
+rotate_left(L1,N,L2) :- N > 0, split(L1,N,S1,S2), append(S2,S1,L2).
 
-?- hastype(G,xor(implies(var(x),var(y)),or(var(z),bool(false))),T).
-G = [(x, boolT), (y, boolT), (z, boolT)|_],
-T = boolT.
 
-*/
-
-% Relational operations
-hastype(G,equal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,greaterthan(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,lessthan(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,greaterequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,lessequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-hastype(G,notequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
-/*
-?- hastype(G,or(not(lessthan(times(var(x),num(5)),var(y))),var(z)),T).
-G = [(x, intT), (y, intT), (z, boolT)|_],
-T = boolT.
-
-?- hastype(G,and(var(x),or(equal(var(y),var(z)),greaterequal(var(a),num(3)))),T).
-G = [(x, boolT), (y, intT), (z, intT), (a, intT)|_],
-T = boolT.
-
-*/
-
-% Ternary operator
-hastype(G,if(E1,E2,E3),T):- istype(T),hastype(G,E1,boolT),hastype(G,E2,T),hastype(G,E3,T) .
-/*
-?- hastype(G,if(var(x),var(y),var(z)),T).
-G = [(x, boolT), (y, intT), (z, intT)|_],
-T = intT ;
-G = [(x, boolT), (y, boolT), (z, boolT)|_],
-T = boolT ;
-G = [(x, boolT), (y, unitT), (z, unitT)|_],
-T = unitT ;
-G = [(x, boolT), (y, listT(intT)), (z, listT(intT))|_],
-T = listT(intT) ;
-G = [(x, boolT), (y, listT(boolT)), (z, listT(boolT))|_],
-T = listT(boolT) ;
-G = [(x, boolT), (y, listT(unitT)), (z, listT(unitT))|_],
-T = listT(unitT).
-
-?- hastype([(x,boolT)],if(var(x),num(6),num(7)),T).
-T = intT .
-
-?- hastype([(x,intT)],if(var(x),num(6),num(7)),T).
-false.
-
-?- hastype([(x,Typex),(y,boolT),(z,Typey)],if(var(y),var(z),var(x)),intT).
-Typex = Typey, Typey = intT.
-*/
 

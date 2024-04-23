@@ -27,6 +27,12 @@ let rec simplify_arith_terms (t : term) =
       | Num n1, Num n2 -> Num (n1 / n2)
       | Wildcard, _ | _, Wildcard -> Wildcard
       | _ -> raise Ill_formed)
+  | Func ("_mod", [ t1; t2 ]) -> (
+      let t1' = simplify_arith_terms t1 and t2' = simplify_arith_terms t2 in
+      match (t1', t2') with
+      | Num n1, Num n2 -> Num (n1 mod n2)
+      | Wildcard, _ | _, Wildcard -> Wildcard
+      | _ -> raise Ill_formed)
   | Wildcard -> Wildcard
   | Var v -> Var v
   | Func (f, ts) -> Func (f, List.map simplify_arith_terms ts)
@@ -104,6 +110,8 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
       | Atom ("<", e)
       | Atom ("\\=", e)
       | Atom ("=", e)
+      | Atom (">=", e)
+      | Atom ("=<", e)
       | Atom ("_is", e) -> (
           try
             let result = solve_relational_atoms g subs in

@@ -1,0 +1,143 @@
+
+% Base types
+islistbasetype(intT).
+islistbasetype(boolT).
+islistbasetype(unitT).
+
+% Predicate to check whether the given type is one of the three base types.
+istype(intT).
+istype(boolT).
+istype(unitT).
+istype(listT(T)):-islistbasetype(T).
+
+
+% Base cases
+hastype(G,num(N),intT):- integer(N).
+hastype(G,bool(true),boolT).
+hastype(G,bool(false),boolT).
+hastype(G,unit,unitT).
+hastype(G,nil,listT(T)):-islistbasetype(T).
+
+% List operations
+hastype(G, cons(A,B), listT(T)) :- islistbasetype(T) , hastype(G, A, T), hastype(G, B, listT(T)).
+hastype(G, head(A), T) :- istype(T), hastype(G, A, listT(T)).
+/*
+?- hastype(G,cons(var(x),cons(num(5),cons(var(y),nil))),T).
+G = [(x, intT), (y, intT)|_],
+T = listT(intT) ;
+
+?- hastype([],cons(bool(true),nil),T).
+T = listT(boolT) ;
+*/
+
+% Variable base case
+% hastype(G,var(X),T):- atom(X), istype(T), mem((X,T),G). 
+/*
+?- hastype(G, var(x),T).
+G = [(x, intT)|_],
+T = intT ;
+G = [(x, boolT)|_],
+T = boolT ;
+G = [(x, unitT)|_],
+T = unitT ;
+G = [(x, listT(intT))|_],
+T = listT(intT) ;
+G = [(x, listT(boolT))|_],
+T = listT(boolT) ;
+G = [(x, listT(unitT))|_],
+T = listT(unitT).
+*/
+
+
+% Arithmetic operations
+hastype(G,plus(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,minus(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,times(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,divide(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,abs(E),intT):- hastype(G,E,intT).
+hastype(G,negate(E),intT):- hastype(G,E,intT).  
+hastype(G,mod(E1,E2),intT):- hastype(G,E1,intT),hastype(G,E2,intT).
+/*
+
+?- hastype(G,plus(times(var(x),num(5)),minus(abs(num(2)),num(6))),T).
+G = [(x, intT)|_],
+T = intT.
+
+?- hastype(G,plus(var(x),num(5)),T).
+G = [(x, intT)|_],
+acT = intT .
+
+?- hastype([(x,intT),(y,T)],plus(var(y),var(x)),intT).
+T = intT .
+
+
+?- hastype(G,greaterthan(times(var(x),num(5)),minus(abs(num(2)),num(6))),T).
+G = [(x, intT)|_],
+T = boolT.
+*/
+
+
+% Boolean operations
+hastype(G,not(E),boolT):- hastype(G,E,boolT).
+hastype(G,and(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
+hastype(G,or(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
+hastype(G,implies(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
+hastype(G,ifandonlyif(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).
+hastype(G,xor(E1,E2),boolT):- hastype(G,E1,boolT),hastype(G,E2,boolT).  
+/*
+
+?- hastype(G,not(xor(implies(var(x),var(y)),ifandonlyif(var(z),bool(false)))),T).
+G = [(x, boolT), (y, boolT), (z, boolT)|_],
+T = boolT.
+
+?- hastype(G,xor(implies(var(x),var(y)),or(var(z),bool(false))),T).
+G = [(x, boolT), (y, boolT), (z, boolT)|_],
+T = boolT.
+
+*/
+
+% Relational operations
+hastype(G,equal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,greaterthan(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,lessthan(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,greaterequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,lessequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+hastype(G,notequal(E1,E2),boolT):- hastype(G,E1,intT),hastype(G,E2,intT).
+/*
+?- hastype(G,or(not(lessthan(times(var(x),num(5)),var(y))),var(z)),T).
+G = [(x, intT), (y, intT), (z, boolT)|_],
+T = boolT.
+
+?- hastype(G,and(var(x),or(equal(var(y),var(z)),greaterequal(var(a),num(3)))),T).
+G = [(x, boolT), (y, intT), (z, intT), (a, intT)|_],
+T = boolT.
+
+*/
+
+% Ternary operator
+hastype(G,if(E1,E2,E3),T):- istype(T),hastype(G,E1,boolT),hastype(G,E2,T),hastype(G,E3,T) .
+/*
+?- hastype(G,if(var(x),var(y),var(z)),T).
+G = [(x, boolT), (y, intT), (z, intT)|_],
+T = intT ;
+G = [(x, boolT), (y, boolT), (z, boolT)|_],
+T = boolT ;
+G = [(x, boolT), (y, unitT), (z, unitT)|_],
+T = unitT ;
+G = [(x, boolT), (y, listT(intT)), (z, listT(intT))|_],
+T = listT(intT) ;
+G = [(x, boolT), (y, listT(boolT)), (z, listT(boolT))|_],
+T = listT(boolT) ;
+G = [(x, boolT), (y, listT(unitT)), (z, listT(unitT))|_],
+T = listT(unitT).
+
+?- hastype([(x,boolT)],if(var(x),num(6),num(7)),T).
+T = intT .
+
+?- hastype([(x,intT)],if(var(x),num(6),num(7)),T).
+false.
+
+?- hastype([(x,Typex),(y,boolT),(z,Typey)],if(var(y),var(z),var(x)),intT).
+Typex = Typey, Typey = intT.
+*/
+

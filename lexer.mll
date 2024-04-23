@@ -27,7 +27,8 @@ rule read = parse
     | '-' { MINUS }
     | '*' { TIMES }
     | '/' { DIVIDE }
-
+    | "mod" { MOD }
+    
     | "=" { EQ }
     | "\\=" {NEQ}
     | "<" { LT }

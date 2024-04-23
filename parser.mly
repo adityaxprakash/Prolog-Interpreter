@@ -11,7 +11,7 @@
 %token PIPE
 %token QUERY 
 %token TRUE NOT FAIL FALSE UNDERSCORE CUT
-%token PLUS MINUS TIMES DIVIDE
+%token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ GT LT GTE LTE
 %token IS 
 %token EOF
@@ -21,6 +21,7 @@
 %type <Helper.program> program
 %type <Helper.clause> clause
 
+%left MOD
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left EQ NEQ GT LT GTE LTE
@@ -82,6 +83,7 @@ term:
 	| term MINUS term { Func("-",[$1;$3]) }
 	| term TIMES term { Func("*",[$1;$3]) }
 	| term DIVIDE term { Func("/",[$1;$3]) }
+	| term MOD term { Func("_mod",[$1;$3]) }
 	| list { $1 }
 
 list:

@@ -9,6 +9,7 @@ type substitution = (string * term) list
 
 let true_atom = Atom ("_true", [])
 let fail_atom = Atom ("_fail", [])
+let false_atom = Atom ("_false", [])
 let cut_atom = Atom ("_cut", [])
 
 exception Not_unifiable

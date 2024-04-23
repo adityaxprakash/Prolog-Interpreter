@@ -98,7 +98,7 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
   | Goal [] -> (true, subs, true)
   | Goal (g :: gs) -> (
       match g with
-      | Atom ("_fail", []) -> (false, [], true)
+      | Atom ("_fail", []) | Atom ("_false", []) -> (false, [], true)
       | Atom ("_true", []) -> answer_goal prog (Goal gs) subs
       | Atom (">", e)
       | Atom ("<", e)

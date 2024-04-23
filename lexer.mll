@@ -13,6 +13,7 @@ rule read = parse
 
 	| "fail" { FAIL }
 	| "true" { TRUE }
+    | "false" { FALSE }
 	| '!' {CUT}
 	| "is" { IS }
 

@@ -10,7 +10,7 @@
 %token LPAREN RPAREN LSQBRACK RSQBRACK 
 %token PIPE
 %token QUERY 
-%token TRUE NOT FAIL UNDERSCORE CUT
+%token TRUE NOT FAIL FALSE UNDERSCORE CUT
 %token PLUS MINUS TIMES DIVIDE
 %token EQ NEQ GT LT GTE LTE
 %token IS 
@@ -53,6 +53,7 @@ atomic_formula:
 
 	| TRUE { Helper.true_atom }
 	| FAIL { Helper.fail_atom }
+	| FALSE { Helper.false_atom }
 	| CUT { Helper.cut_atom }
 	| NOT atomic_formula { Not $2 }
 

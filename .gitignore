@@ -4,3 +4,4 @@ main
 lexer.ml
 parser.ml
 parser.mli
+.ocamlformat

@@ -152,10 +152,7 @@ let rec answer_goal (prog' : program) (goals : goal) (subs : substitution) =
                   if result then (result, new_sub, not_cut)
                   else if not_cut then iterate ps
                   else (false, new_sub, not_cut)
-                with Not_unifiable ->
-                  (* let (Atom (pred, ts)) = h in
-                     print_endline (term_to_string (Func (pred, ts))); *)
-                  iterate ps)
+                with Not_unifiable -> iterate ps)
           in
           iterate prog)
 

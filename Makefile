@@ -1,5 +1,5 @@
 .PHONY: all pl clean
-LOAD ?= programs/test2.txt
+LOAD ?= test2.txt
 TARGET = main
 
 all: 
@@ -12,7 +12,7 @@ all:
 	@ocamlc -c lexer.ml 
 	@ocamlc -c main.ml 
 	@ocamlc -o $(TARGET) helper.cmo interpreter.cmo parser.cmo lexer.cmo main.cmo 
-	@./main $(LOAD)
+	@./main programs/$(LOAD)
 
 clean:
 	@rm -f *.cmo *.cmi parser.ml parser.mli lexer.ml

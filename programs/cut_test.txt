@@ -1,9 +1,0 @@
-p(1).
-p(2):-!.
-p(3).
-
-max(X,Y,Y) :- X <Y,!.
-max(X,Y,X).
-
-max_g(X,Y,Y) :- X < Y.
-max_g(X,Y,X) :- X>Y.
